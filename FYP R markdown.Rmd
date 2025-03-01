@@ -1,0 +1,172 @@
+---
+title: "Intertidal Faunal Diversity in Galway Bay"
+author: "Kate Keoghan"
+date: "2025-03-01"
+output: html_document
+---
+
+### **Setting up the data**
+
+**Download the data:**
+
+Download the `FYP_data` file from WEBSITE NAME and save it as a `.csv` file to a folder on your computer. 
+
+
+**Set the working directory:** 
+
+Option 1:
+Click on "Session" and then "Set Working Directory". Then click on "Choose Directory..." and pick the folder that the `.csv` file is saved to. 
+Option 2:
+Use the `setwd()` function with the directory path that leads to the folder that the `FYP_data.csv` file is saved to. An example is `setwd("C:/Users/Asus/OneDrive/Desktop/FY")`
+
+**Upload the data to R:**
+
+```{r data}
+#Upload the data.
+FYP_data <- read.csv("FYP_data.csv")
+```
+
+**Preparing the data:**
+
+```{r}
+#Seperate the data by exposure level.
+exposed <- FYP_data[FYP_data$Exposure=="Exposed",]
+sheltered <- FYP_data[FYP_data$Exposure=="Sheltered",]
+```
+
+**Load `vegan` package:**
+
+If the `vegan` package is not already installed, install it using `install.packages("vegan")`  before loading the package.
+
+```{r message=FALSE, warning=FALSE}
+#Load the package.
+library(vegan)
+```
+
+### **Calculating the diversity parameters and indices**
+
+**Calculate the total number of individuals (*n*) for each sample:**
+
+```{r}
+#Calculate n for the exposed sites.
+exposed$n <- rowSums(exposed[,4:20])
+```
+
+```{r}
+#Calculate n for the sheltered sites.
+sheltered$n <- rowSums(sheltered[,4:20])
+```
+
+**Conduct a Welch's t-test to compare *n* between the two exposure levels:**
+
+```{r results='hide'}
+t.test(exposed$n, sheltered$n)
+```
+
+**Calculate species richness (*s*) for each sample:**
+
+```{r}
+#Calculate s for the exposed sites.
+exposed$Species_richness <- specnumber(exposed[,4:20])
+```
+
+```{r}
+#Calculate s for the sheltered sites.
+sheltered$Species_richness <- specnumber(sheltered[,4:20])
+```
+
+**Conduct a Welch's t-test to compare *s* between the two exposure levels:**
+
+```{r results='hide'}
+t.test(exposed$Species_richness, sheltered$Species_richness)
+```
+
+**Calculate Shannon Diversity Index (*H'*) for each sample:**
+
+```{r}
+#Calculate H' for the exposed sites.
+exposed$Shannon <- diversity(exposed[,4:20], index = "shannon")
+```
+
+```{r}
+#Calculate H' for the sheltered sites.
+sheltered$Shannon <- diversity(sheltered[,4:20], index = "shannon")
+```
+
+**Conduct a Welch's t-test to compare *H'* between the two exposure levels:**
+
+```{r results='hide'}
+t.test(exposed$Shannon, sheltered$Shannon)
+```
+
+**Calculate Pielou's Evenness Index (*J'*) for each sample:**
+
+```{r}
+#Calculate J' for the exposed sites.
+exposed$Pielou <- exposed$Shannon / log(exposed$Species_richness)
+```
+
+```{r}
+#Calculate J' for the sheltered sites.
+sheltered$Pielou <- sheltered$Shannon / log(sheltered$Species_richness)
+```
+
+**Conduct a Welch's t-test to compare *J'* between the two exposure levels:**
+
+```{r results='hide'}
+t.test(exposed$Pielou, sheltered$Pielou)
+```
+ 
+**Calculate Simpson's Evenness Diversity Index (*D'*) for each sample:**
+
+```{r}
+#Calculate D' for the exposed sites.
+exposed$Simpson <- 1 - apply(exposed[,4:20], 1, function(x) diversity(x, index = "simpson"))
+```
+
+```{r}
+#Calculate D' for the sheltered sites.
+sheltered$Simpson <- 1 - apply(sheltered[,4:20], 1, function(x) diversity(x, index = "simpson"))
+```
+
+**Conduct a Welch's t-test to compare *D'* between the two exposure levels:**
+
+```{r results='hide'}
+t.test(exposed$Simpson, sheltered$Simpson)
+```
+
+
+#### **Conducting the PERMANOVA**
+
+```{r}
+#Square root transform the data.
+sqrt_data <- sqrt(FYP_data[,4:20])
+```
+
+```{r hide}
+#Create a Bray Curtis Similarity Matrix.
+bray_curtis_matrix <- vegdist(sqrt_data, method ="bray")
+```
+
+```{r}
+#Perform the PERMANOVA.
+PERMANOVA_result <- adonis2(bray_curtis_matrix ~ Exposure, data = FYP_data, permutations = 999)
+```
+
+```{r results='hide'}
+#View the results.
+View(PERMANOVA_result)
+```
+
+#### **Conducting the SIMPER analysis**
+
+```{r}
+#Perform the SIMPER analysis.
+simper_result <- simper(FYP_data[,4:20], group = FYP_data$Exposure)
+```
+
+```{r results='hide'}
+#View the results.
+summary(simper_result)
+```
+
