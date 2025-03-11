@@ -9,7 +9,7 @@ output: html_document
 
 **Download the data:**
 
-Download the `FYP_data` file from WEBSITE NAME and save it as a `.csv` file to a folder on your computer. 
+Download the `FYP_data` and the `TFA_data` files from WEBSITE NAME and save them as a `.csv` file to a folder on your computer. 
 
 
 **Set the working directory:** 
@@ -17,13 +17,14 @@ Download the `FYP_data` file from WEBSITE NAME and save it as a `.csv` file to a
 Option 1:
 Click on "Session" and then "Set Working Directory". Then click on "Choose Directory..." and pick the folder that the `.csv` file is saved to. 
 Option 2:
-Use the `setwd()` function with the directory path that leads to the folder that the `FYP_data.csv` file is saved to. An example is `setwd("C:/Users/Asus/OneDrive/Desktop/FY")`
+Use the `setwd()` function with the directory path that leads to the folder that the files is saved to. An example is `setwd("C:/Users/Asus/OneDrive/Desktop/FY")`
 
 **Upload the data to R:**
 
 ```{r data}
 #Upload the data.
 FYP_data <- read.csv("FYP_data.csv")
+TFA_data <- read.csv("FYP_TFA_data.csv")
 ```
 
 **Preparing the data:**
@@ -169,4 +170,17 @@ simper_result <- simper(FYP_data[,4:20], group = FYP_data$Exposure)
 #View the results.
 summary(simper_result)
 ```
+
+### **Analysing the TFA data**
+
+**Calculate Spearman's rank correlation**
+```{r}
+cor.test(TFA_data$MaxN, TFA_data$TFA_min, method = "spearman")
+```
+
+**Calculate Kendall's rank correlation**
+```{r}
+cor.test(TFA_data$MaxN, TFA_data$TFA_min, method = "kendall")
+```
+
 
